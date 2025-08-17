@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AnimePulse</title>
+  <meta name="theme-color" content="#0ea5e9">
+  <!-- iOS PWA tweaks -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    :root { --bg:#0b1221; --panel:#0f172a; --muted:#94a3b8; --text:#e2e8f0; --accent:#0ea5e9; --card:#111827; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+           background: var(--bg); color: var(--text); }
+    header { position: sticky; top:0; z-index: 50; background: rgba(11,18,33,.9); backdrop-filter: blur(8px); border-bottom: 1px solid #1f2937; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px 16px; }
+    .brand { display:flex; align-items:center; gap:8px; }
+    .brand .dot { width:10px; height:10px; border-radius:50%; background: var(--accent); box-shadow: 0 0 20px var(--accent); }
+    h1 { font-size: 18px; margin:0; }
+    nav { display:grid; grid-template-columns: repeat(3,1fr); gap:8px; padding: 8px 16px 12px; }
+    nav button { background:#0f172a; color:var(--text); border:1px solid #243244; padding:10px 12px; border-radius:10px; cursor:pointer; }
+    nav button.active { background:#172033; border-color:#2b3c52; }
+    .grid { display:grid; gap:12px; }
+    @media (min-width: 900px){ .grid-cols-3 { grid-template-columns: repeat(3,1fr);} .grid-cols-2 { grid-template-columns: repeat(2,1fr);} }
+    .card { background: var(--panel); border:1px solid #223047; border-radius:14px; padding: 12px; }
+    .row { display:flex; gap:8px; align-items:center; }
+    .row-wrap { display:flex; flex-wrap: wrap; gap:8px; align-items:center; }
+    .grow { flex:1; }
+    input, select, textarea { background:#0b1221; border:1px solid #223047; color:var(--text); padding:10px 12px; border-radius:10px; width:100%; }
+    textarea { min-height: 96px; }
+    .btn { background:#0a84d0; border:0; color:white; padding:10px 14px; border-radius:10px; cursor:pointer; }
+    .btn.secondary { background:#1f2937; color:#cbd5e1; }
+    .btn.warn { background:#b91c1c; }
+    .badge { background:#0b1221; border:1px solid #223047; color:#cbd5e1; padding:2px 8px; border-radius:999px; font-size: 12px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .title { font-weight: 600; }
+    .split { display:grid; gap:12px; }
+    @media (min-width: 900px){ .split { grid-template-columns: 2fr 1fr; } }
+    .right { text-align:right; }
+    .link { color:#7dd3fc; text-decoration: none; }
+    .pill { background:#102034; border:1px solid #2b3c52; border-radius:12px; padding: 4px 8px; color:#cfe8ff; font-size: 12px; }
+    .small { font-size: 12px; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap row" style="justify-content: space-between;">
+      <div class="brand">
+        <div class="dot"></div>
+        <h1>AnimePulse</h1>
+        <span class="pill">PWA</span>
+      </div>
+      <button class="btn secondary small" id="openSettings">Settings</button>
+    </div>
+    <div class="wrap">
+      <nav>
+        <button id="tabReleases" class="active">Releases</button>
+        <button id="tabNews">News</button>
+        <button id="tabAI">AI</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding: 14px 16px 48px">
+    <!-- Releases -->
+    <section id="pageReleases">
+      <div class="row" style="gap:10px; margin-bottom:10px">
+        <input id="searchBox" placeholder="Search anime or genres...">
+        <button id="addAnimeToggle" class="btn secondary">Add Anime</button>
+      </div>
+      <div id="addAnimeForm" class="card hidden">
+        <div class="grid grid-cols-2">
+          <div>
+            <div class="small muted">Title</div>
+            <input id="newTitle" placeholder="e.g., Solo Leveling II">
+          </div>
+          <div>
+            <div class="small muted">Day (1=Mon ... 7=Sun)</div>
+            <input id="newDay" type="number" min="1" max="7" value="5">
+          </div>
+          <div>
+            <div class="small muted">Time (HH:MM, source TZ)</div>
+            <input id="newTime" value="21:00">
+          </div>
+          <div>
+            <div class="small muted">Timezone</div>
+            <select id="newTZ">
+              <option>Asia/Tokyo</option>
+              <option>America/Sao_Paulo</option>
+              <option>UTC</option>
+              <option>America/New_York</option>
+              <option>Europe/London</option>
+            </select>
+          </div>
+          <div>
+            <div class="small muted">Genres (comma)</div>
+            <input id="newGenres" value="action,fantasy">
+          </div>
+        </div>
+        <div class="right" style="margin-top:10px">
+          <button id="saveNewAnime" class="btn">Save</button>
+        </div>
+      </div>
+      <div id="animeGrid" class="grid grid-cols-3" style="margin-top:12px"></div>
+    </section>
+
+    <!-- News -->
+    <section id="pageNews" class="hidden">
+      <div class="split">
+        <div id="newsList" class="grid"></div>
+        <div class="grid">
+          <div class="card">
+            <div class="title" style="margin-bottom:6px">Add News / Announcement</div>
+            <input id="newsTitle" placeholder="Title">
+            <textarea id="newsBody" placeholder="Body" style="margin-top:8px"></textarea>
+            <div class="row" style="gap:8px; margin-top:8px">
+              <input id="newsDate" type="date">
+              <input id="newsTag" placeholder="Tag (Anime)">
+            </div>
+            <div class="right" style="margin-top:8px">
+              <button id="publishNews" class="btn">Publish</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="title" style="margin-bottom:6px">Backup & Restore</div>
+            <div class="row" style="gap:8px">
+              <button id="btnExport" class="btn">Export</button>
+              <button id="btnImport" class="btn secondary">Import</button>
+            </div>
+            <textarea id="brJson" placeholder="Paste/Copy JSON here" style="margin-top:8px; height:120px"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section id="pageAI" class="hidden">
+      <div class="split">
+        <div class="grid">
+          <div class="card">
+            <div class="title" style="margin-bottom:6px">Search by Anything</div>
+            <input id="aiSearch" placeholder="e.g., exorcists, dark vibes, tournament arcs">
+            <div id="aiMatches" class="grid" style="margin-top:8px"></div>
+          </div>
+          <div class="card">
+            <div class="title" style="margin-bottom:6px">AI Suggestions (offline)</div>
+            <textarea id="aiPrompt" placeholder="Describe your mood, themes, or constraints...">Recommend me a short watch this weekend.</textarea>
+            <div class="right" style="margin-top:8px">
+              <button id="askAI" class="btn">Ask AI</button>
+            </div>
+            <pre id="aiOut" class="small" style="margin-top:8px; white-space:pre-wrap"></pre>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <div class="title" style="margin-bottom:6px">Your Tastes</div>
+            <div id="genrePills" class="row-wrap"></div>
+            <div class="muted small" style="margin-top:6px">Tap to toggle preferred genres. They influence search ranking & suggestions.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings panel -->
+  <div id="settingsPanel" class="hidden" style="position:fixed; right:12px; top:80px; z-index:100; width:320px;">
+    <div class="card">
+      <div class="title">Settings</div>
+      <div class="small muted" style="margin-top:6px">Default reminder (minutes)</div>
+      <input id="setMins" type="number" min="0" max="180" value="15">
+      <div class="small muted" style="margin-top:6px">Timezone</div>
+      <select id="setTZ">
+        <option>Asia/Tokyo</option>
+        <option selected>America/Sao_Paulo</option>
+        <option>UTC</option>
+        <option>America/New_York</option>
+        <option>Europe/London</option>
+      </select>
+      <div class="small muted" style="margin-top:6px">VAPID Public Key (for push)</div>
+      <input id="setVapid" placeholder="Paste your VAPID public key">
+      <div class="row" style="justify-content: space-between; margin-top:8px">
+        <button id="btnPush" class="btn secondary small">Enable Push</button>
+        <button id="closeSettings" class="btn small">Save</button>
+      </div>
+      <div id="pushMsg" class="small" style="margin-top:6px; color:#7dd3fc"></div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/luxon@3/build/global/luxon.min.js"></script>
+
+  <!-- App logic -->
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+    }
+  </script>
+</body>
+</html>
